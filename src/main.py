@@ -79,7 +79,7 @@ def bits_to_ascii(bits):
 
 
 def main():
-    wav_file = "5_1_92.wav"
+    wav_file = "../Data/5_1_92.wav"
 
     fs, samples = wavfile.read(wav_file)
     if samples.dtype != np.float64:
