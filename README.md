@@ -10,6 +10,7 @@ This project decodes binary data transmitted as a sequence of sinusoidal pulses 
 - Установленные зависимости / installed dependencies:
   - `numpy`
   - `scipy`
+  - `scikit-learn`
 
 Все зависимости можно установить командой / All dependencies can be installed with:
 
