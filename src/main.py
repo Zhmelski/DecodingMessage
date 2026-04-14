@@ -87,7 +87,13 @@ def bits_to_ascii(bits):
 
 
 def main():
-    wav_file = "../Data/5_2_49.wav"  # укажите ваш файл
+    # === НАСТРОЙКИ (для ручной фиксации параметров) ===
+    FORCE_FREQ = None  # укажите нужную частоту в Гц (например, 2100.0) или None для автоматического поиска
+    FORCE_SHIFT = None  # укажите желаемое смещение в отсчётах (например, 0) или None для автоматического поиска
+    FORCE_DUR = None  # укажите желаемую длительность бита в секундах (например, 0.115) или None для автоматического поиска
+    # =================================================
+
+    wav_file = "../Data/5_2_49.wav"
     fs, samples = wavfile.read(wav_file)
     if samples.dtype != np.float64:
         samples = samples.astype(np.float64) / np.max(np.abs(samples))
@@ -100,12 +106,24 @@ def main():
 
     dur, shift = find_best_shift_and_duration(samples, fs, freq)
 
+    # === Принудительная установка параметров, если они заданы вручную ===
+    if FORCE_FREQ is not None:
+        freq = FORCE_FREQ
+        print(f"** Частота синусоиды принудительно установлена: {freq:.1f} Гц **")
+    if FORCE_DUR is not None:
+        dur = FORCE_DUR
+        print(f"** Длительность бита принудительно установлена: {dur * 1000:.1f} мс **")
+    if FORCE_SHIFT is not None:
+        shift = FORCE_SHIFT
+        print(f"** Смещение принудительно установлено: {shift} отсч. ({shift / fs * 1000:.2f} мс) **")
+    # =================================================
+
     spb = int(dur * fs)
     num_bits = (len(samples) - shift) // spb
     truncated = samples[shift: shift + num_bits * spb]
     corrs = [complex_correlation(truncated[i * spb:(i + 1) * spb], freq, fs, center=True) for i in range(num_bits)]
 
-    # --- Исправленный порог: используем KMeans для разделения ---
+    # --- Порог: используем KMeans для разделения ---
     X = np.array(corrs).reshape(-1, 1)
     kmeans = KMeans(n_clusters=2, random_state=0, n_init=10).fit(X)
     labels = kmeans.labels_
@@ -117,7 +135,6 @@ def main():
     else:
         threshold = (mean1 + mean0) / 2
         bits = ''.join(['1' if c > threshold else '0' for c in corrs])
-    # --- конец исправления ---
 
     text = bits_to_ascii(bits)
 
